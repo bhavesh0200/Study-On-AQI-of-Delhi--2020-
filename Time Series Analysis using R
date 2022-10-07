@@ -1,0 +1,126 @@
+> aqi.ts=ts(x,start=c(2015,1),end = c(2020,6),frequency = 12)
+#Train and Test Data
+> train=window(aqi.ts,start=c(2015,1),end=c(2019,6),frequency=12)
+> test=window(aqi.ts,start=c(2019,7),end=c(2020,6),frequency=12
+> plot.ts(train,ylab='AQI',xlab='time',main='aqi ts plot')
+
+
+#Decomposition of Time Series
+Decompose () function is used to decompose the given time series into seasonal, 
+trend and irregular components using moving averages.
+> d1=decompose(train)
+> plot(d1)
+
+#Tests for Stationarity:
+• Augmented Dickey-Fuller Test:
+ #To test, H0: Time series is not stationary 
+ #Against H1: Time series is stationary.
+> adf.test(train)
+#data: train
+#Dickey-Fuller = -3.0002, Lag order = 3, p-value = 0.1717
+#alternative hypothesis: stationary
+#Decision: Here since, p-value > 0.05 
+ #Therefore, we accept H0 ⇒ Non-stationary
+
+#KPSS Test:
+#To test, H0: Time series is trend stationary 
+#Against H1: Time series is not stationary.
+> kpss.test(train)
+ #pvalue = 0.1
+ #Here p-value > 0.05 
+ #Therefore, we accept H0 ⇒ stationary
+ 
+#Differencing of the Time Series:
+> D1=diff(train) 
+> plot.ts(D1, ylab='AQI',xlab='time',main='AQI ts after differencing')
+
+#ADF and KPSS test.
+> adf.test(D1) 
+> kpss.test(D1)
+
+#Augmented Dickey-Fuller Test: 
+#data: D1 Dickey-Fuller = -4.2597, Lag order = 3, p-value = 0.01 alternative hypothesis: stationary 
+#Decision: Here p-value < 0.05 
+ #Therefore, we reject H0 ⇒ Time series is stationary.
+#KPSS Test for Level Stationarity: 
+#data: D1 KPSS Level = 0.07947, Truncation lag parameter = 3, p-value = 0.1
+#Decision: Here p-value > 0.05 
+ #Therefore, we may accept H0 ⇒ Time series is stationary. 
+
+> Acf(D1) 
+> Pacf(D1)
+
+#Applying ARIMA
+> A1=auto.arima(train) 
+> A1
+#Output:
+#Series: train 
+#ARIMA(0,0,1) with non-zero mean 
+#Coefficients: ma1 mean 
+ #0.3233 336.3697
+ #s.e. 0.1463 8.1615 
+#sigma^2 estimated as 2152: log likelihood=-282.87 
+#AIC=571.73 AICc=572.21 BIC=577.7
+
+> fit1=Arima(train,order = c(0,0,1)) 
+#plotting fitted values with observed values
+> plot(train,main='observed with fitted values') 
+> lines(fitted(fit1),col=2)
+
+> fit1=Arima(train,order = c(0,0,1)) 
+#plotting fitted values with observed values
+> plot(train,main='observed with fitted values') 
+> lines(fitted(fit1),col=2)
+> accuracy(forecast1)
+
+#Model validation: 
+#1) check Randomness of errors:
+>Acf(forecast1$residuals,main='residuals acf plot')
+>Pacf(forecast1$residuals)
+
+#Box L-jung test:
+#This test is used for checking sample autocorrelation to be significant. 
+#Ho: Residual follows sequence of independent identical random variable or white noise.
+#H1 : Residual have significant serial dependence .
+> Box.test(forecast1$residuals,type = "Ljung-Box")
+#Output:
+#data: forecast1$residuals
+#X-squared = 0.17733, df = 1, p-value = 0.6737
+
+
+#2) Check Normality of residuals:
+> hist(forecast1$residuals,col='red',xlab='error',main='histogram of residuals',freq = FALSE)
+> lines(density(forecast1$residuals))
+
+
+#(2) Holt’s double Exponential Smoothing
+
+> airhw=HoltWinters(train,gamma = FALSE)
+>airhw
+> airhw=HoltWinters(train,gamma = FALSE)
+>airhw
+
+> hwforecast=forecast(airhw)
+>accuracy(hwforecast)
+
+>plot(hwforecast)
+> lines(test,col=2)
+
+
+#Checking Randomness of model
+>plot(hwforecast)
+>lines(test,col=2)
+>plot(hwforecast)
+>lines(test,col=2)
+>plot(hwforecast)
+> lines(test,col=2)
+
+#Box-Ljung test
+> Box.test(hwforecast$residuals,type = 'Ljung-Box') 
+#data: hwforecast$residuals
+#X-squared = 0.061911, df = 1, p-value = 0.8035
+
+#Checking Normality:
+
+> plot.ts(hwforecast$residuals)
+>hist(hwforecast$residuals,col='red',xlab='error',main='histogram of residuals',freq = FALSE)
