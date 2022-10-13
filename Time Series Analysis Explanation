@@ -1,0 +1,231 @@
+## Time Series Analysis
+
+We have data which is daily Air Quality Index of Delhi from January 2015 to July 
+2020. First of all, in the part of data analysis there is a need for cleaning of data in 
+which the data is managed and arranged for it has to be analyzed. After cleaning 
+the data, the model for forecasting has to be build. Once the model is built then 
+with the help of the cleaned data forecasting is to be done using time series 
+analysis.
+Analysis will be done on the training data i.e. from January 2015 to June 2019 and 
+the test data of next twelve months i.e. from July 2019 to June 2020 will be used 
+for validation of analysis.
+
+##Decomposition of Time Series
+
+Decompose () function is used to decompose the given time series into seasonal, trend and irregular
+components using moving averages. the function first determines the trend component from data and 
+removes it from series then seasonal figure is computed by averaging. the seasonal figure is then 
+centered. finally the irregular or error component is determined by removing trend and seasonal figure
+
+## TEST FOR STATIONARITY:
+
+Augmented Dickey-Fuller Test
+To test H0: Time series is not stationary        Against      H1: Time series is stationary.
+Here,
+Dickey-Fuller = -3.0002, Lag order = 3, p-value = 0.1717
+alternative hypothesis: stationary
+Decision:  Here p-value > 0.05
+Hence, we fail to reject H0 ⇒  the time series is non- stationary.
+
+
+KPSS Test: 
+To test H0: Time series is stationary           Against         H1: Time series is not stationary.
+
+KPSS Level = 0.27091, Truncation lag parameter = 3, p-value = 0.1
+Decision:  Here p-value > 0.05 
+Hence, we fail to reject H0 ⇒ the time series is stationary
+
+
+##Interpretation: Here ADF test shows non-stationary while KPSS test shows Stationary. 
+It means our series is trend stationary.
+Trend needs to be removed to make series stationary. The detrended series is checked for stationarity.
+
+
+##Differencing of the Time Series:
+ In statistics, differencing is the transformation applied to the time series data in order to make 
+it stationary. In order to difference the data, the difference between consecutive observations is 
+computed. Differencing removes the changes in the level of time series, eliminating trend and seasonality 
+and consequently stabilizing the mean of the time series.
+We start off with a non-stationary time series, therefore we first need to ‘difference’ the time series until obtain a stationary time series.
+
+
+From the time plot (above), we can see that the time series is not stationary in mean.
+
+After differencing the time series we again check stationarity of time series by ADF and KPSS test
+
+#Augmented Dickey-Fuller Test
+data:  D1
+Dickey-Fuller = -4.2597, Lag order = 3, p-value = 0.01
+alternative hypothesis: stationary
+Decision:  Here p-value < 0.05
+Therefore we reject  H0 ⇒ Time series is stationary.
+
+
+KPSS Test for Level Stationarity
+data:  D1
+KPSS Level = 0.07947, Truncation lag parameter = 3, p-value = 0.1
+Decision:  Here p-value > 0.05 therefore we may accept H0 
+⇒ Time series is stationary.
+
+
+By taking the time series of first differences, we have removed the trend component of the time series
+and are left with an irregular component. We can now examine whether there are correlations between 
+successive terms of this irregular component; if so, this could help us to make a predictive model for
+AQI.
+
+We see from the ACF plot  that the autocorrelation at lag 1 exceeds the significance bounds, but all 
+other autocorrelations between lags do not exceed the significance bounds.
+The partial correlogram shows that the partial autocorrelations at lags 1 exceed the significance
+bound, are negative, and are slowly decreasing in magnitude with increasing lag  
+Since PACF is decreasing , our model may be moving average(MA) and there is only one significant 
+lag in ACF so order should be one  i.e. MA (1).
+
+
+##Shortcut: the auto.arima() function
+The auto.arima() function can be used to find the appropriate model. 
+The output says an appropriate model is MA(1).
+
+Output 
+Series: train 
+ARIMA(0,0,1) with non-zero mean 
+ 
+Coefficients:
+         ma1      mean
+      0.3233  336.3697
+s.e.  0.1463    8.1615
+ 
+sigma^2 estimated as 2152:  log likelihood=-282.87
+AIC=571.73   AICc=572.21   BIC=577.7
+> fit1=Arima(train,order = c(0,0,1)) 
+#AQI forecasting
+> forecast1=forecast(fit1,12)
+> plot(forecast1,ylab='aqi',xlab='months',main='forecast plot from MA')
+> accuracy(forecast1) 
+
+
+                ME           RMSE      MAE       MPE       MAPE           MASE              ACF1       
+Training set -0.4188647   45.52656   28.02981  -2.829162    9.989907      0.6433071      -0.05574849
+
+## Model validation:  (Residual analysis)
+We need to check whether the forecast errors of model are normally distributed with mean zero and 
+constant variance, and whether there are correlations between successive forecast errors.
+
+1) Check Randomness of errors: Using ACF plot
+>Acf(forecast1$residuals,main='residuals acf plot')
+> Pacf(forecast1$residuals) 
+
+From ACF and PACF plot it is clearly seen that ,there is no significant correlation between forecast 
+errors .Hence residuals are uncorrelated.
+
+
+##Box L-jung test :
+This test is used for checking sample autocorrelation to be significant. 
+Ho: Residual follows sequence of independent identical random variable or white noise .
+H1 : Residual have significant serial dependence .
+> Box.test(forecast1$residuals,type = "Ljung-Box")
+Output 
+data:  forecast1$residuals
+X-squared = 0.17733, df = 1, p-value = 0.6737
+Since the correlogram shows that none of the sample autocorrelations for lags exceed the significance 
+bounds, and the p-value for the Ljung-Box test is 0.6737, we can conclude that forecast residuals are 
+random.
+
+## 2) Check Normality of residuals:
+To investigate whether the forecast errors are normally distributed with mean zero and constant 
+variance, we can make a time plot and histogram (with overlaid normal curve) of the forecast errors:
+> hist(forecast1$residuals,col='red',xlab='error',main='histogram of residuals',freq = FALSE)
+> lines(density(forecast1$residuals))
+
+
+The time plot of the in-sample forecast errors shows that the variance of the forecast errors seems to be roughly constant over time.
+The histogram of the time series shows that the forecast errors are roughly normally distributed and 
+the mean seems to be close to zero. Therefore, we can say that the forecast errors are normally 
+distributed with mean zero and constant variance.
+
+### Conclusion:
+Since successive forecast errors do not seem to be correlated, and the forecast errors seem to be
+normally distributed with mean zero and constant variance, the MA(1) does seem to provide an adequate
+predictive model for the AQI values.
+
+
+### (2) Holt’s double Exponential Smoothing
+Here we have additive time series that with decreasing trend and no seasonality so we can use Holt’s 
+double exponential smoothing to make short-term forecasts.
+
+#holtwinters model
+> airhw=HoltWinters(train,gamma = FALSE)
+ >airhw
+Holt-Winters exponential smoothing with trend and without seasonal component.
+ 
+Call:
+HoltWinters(x = train, gamma = FALSE)
+ 
+Smoothing parameters:
+ alpha: 0.6116533
+ beta : 0.05841064
+ gamma: FALSE
+ 
+Coefficients:
+        [,1]
+a 285.397522
+b  -3.754306
+
+                ME     RMSE      MAE          MPE             MAPE      MASE        ACF1	
+Training set  7.668015   54.08508  34.53135  -0.5258884  12.78346  0.7925227  -0.03353282
+
+## Model validation:
+We need to check whether the forecast errors of model are normally distributed with mean zero and 
+constant variance, and whether there are correlations between successive forecast errors.
+
+From ACF and PACF plot it is clearly seen that ,there is no significant correlation between forecast
+errors .Hence residuals are uncorrelated.
+
+Box-Ljung test
+ 
+data:  hwforecast$residuals
+X-squared = 0.061911, df = 1, p-value = 0.8035
+Since the correlogram shows that none of the sample autocorrelations for lags exceed the significance
+bounds, and the p-value for the Ljung-Box test is 0.8035, we can conclude that forecast residuals are
+random.
+
+#2) Check Normality of residuals:
+To investigate whether the forecast errors are normally distributed with mean zero and constant 
+variance, we can make a time plot and histogram (with overlaid normal curve) of the forecast errors:
+
+
+The time plot of the in-sample forecast errors shows that the variance of the forecast errors seems to 
+be roughly constant over time. The histogram of the time series shows that the forecast errors are 
+roughly normally distributed and the mean seems to be close to zero. Therefore, we can say that the
+forecast errors are normally distributed with mean zero and constant variance.
+
+#Conclusion:
+    Since successive forecast errors do not seem to be correlated, and the forecast errors seem to be normally distributed with mean zero and constant variance, the HW double exponential model does seem to provide an adequate predictive model for the AQI values.
+ 
+ Now we validate the obtained forecast values with original values for-
+(1) MA(1) model      and       (2) HW double exponential model
+	ME	RMSE	MAE	MPE	MAPE	MASE
+MA (1)	-0.41886	45.52656	28.02981	-2.8291	9.989907	0.6433
+HW	7.668015	54.08508	34.53135	-0.52559	12.78346	0.792577
+
+year	month	Original ts (Y1)	forecast from MA(1) 	residuals from MA(1) model	forecast from HW	Residuals from HW model
+		    (Y1)	(Y2)	    ІY2-Y1І	(Y3)	ІY3-Y1І
+2019	Jul	354	    324.1423	29.85	281.65	72.35
+	    Aug	340	    336.37	    3.63	277.89	62.11
+	    Sep 323 	336.36  	13.36	274.2	48.8
+	    Oct	315	    336.36  	21.36	270.38	44.62
+	    Nov	310	    336.36	    26.36	266.62	43.38
+	    Dec	324	    336.36  	12.36	262.87	61.13
+2020	Jan	226	    336.36	    110.36	259.12	33.12
+	    Feb	266	    336.36  	70.36	255.36	10.64
+    	Mar	200	    336.36	    136.37	251.61	51.61
+	    Apr	275	    336.36  	61.37	247.85	27.15
+	    May	322	    336.36	    14.37	244.1	77.9
+	    Jun	216	    336.36  	120.37	240.35	24.35
+
+
+From the above table we can say that forecast by MA(1) model is more effective than forecast by HW model.
+Therefore MA(1)  model is best model for forecasting AQI values.
+
+
+
+
