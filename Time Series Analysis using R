@@ -6,13 +6,13 @@
 
 
 #Decomposition of Time Series
-Decompose () function is used to decompose the given time series into seasonal, 
-trend and irregular components using moving averages.
+#Decompose () function is used to decompose the given time series into seasonal, 
+#trend and irregular components using moving averages.
 > d1=decompose(train)
 > plot(d1)
 
 #Tests for Stationarity:
-• Augmented Dickey-Fuller Test:
+#Augmented Dickey-Fuller Test:
  #To test, H0: Time series is not stationary 
  #Against H1: Time series is stationary.
 > adf.test(train)
