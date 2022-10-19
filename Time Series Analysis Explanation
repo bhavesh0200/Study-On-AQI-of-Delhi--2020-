@@ -1,4 +1,4 @@
-## Time Series Analysis
+## Time Series Analysis And Forcasting
 
 We have data which is daily Air Quality Index of Delhi from January 2015 to July 
 2020. First of all, in the part of data analysis there is a need for cleaning of data in 
@@ -225,7 +225,3 @@ year	month	Original ts (Y1)	forecast from MA(1) 	residuals from MA(1) model	fore
 
 From the above table we can say that forecast by MA(1) model is more effective than forecast by HW model.
 Therefore MA(1)  model is best model for forecasting AQI values.
-
-
-
-
